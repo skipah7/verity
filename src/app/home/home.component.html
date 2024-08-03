@@ -1,0 +1,24 @@
+@if (!currentUser()) {
+  <div class="auth">
+    <nz-input-group [nzPrefix]="prefixTemplateUser">
+      <input
+        type="text"
+        nz-input
+        placeholder="Enter your username"
+        [(ngModel)]="username"
+      />
+    </nz-input-group>
+    <ng-template #prefixTemplateUser
+      ><span nz-icon nzType="user"></span
+    ></ng-template>
+
+    <button
+      nz-button
+      nzType="primary"
+      [disabled]="!username()"
+      (click)="onJoinRoom()"
+    >
+      Join
+    </button>
+  </div>
+} @else {}

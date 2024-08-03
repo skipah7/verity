@@ -1,0 +1,15 @@
+$background: #141414;
+
+:host {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  background-color: $background;
+}
+
+.auth {
+  display: flex;
+  gap: 8px;
+}
