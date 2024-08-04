@@ -96,7 +96,7 @@ export class StatueUsersComponent implements ControlValueAccessor {
 
   writeValue(value: [RoomUser, RoomUser, RoomUser]): void {
     if (!value) return;
-    this.form.setValue({ ...value }, { emitEvent: false });
+    this.form.patchValue({ ...value });
   }
 
   registerOnChange(onChange: (value: RoomUser[]) => void): void {

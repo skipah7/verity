@@ -22,13 +22,23 @@
     </button>
   </div>
 } @else {
-  <ng-container [formGroup]="form">
-    <app-starting-values
-      class="box"
-      formControlName="startingValue"
-      [users]="room()"
-    />
-  </ng-container>
+  <div class="box starting-values" [formGroup]="form">
+    <app-starting-values formControlName="startingValue" [users]="room()" />
+
+    @if (isAdmin()) {
+      <div class="buttons">
+        <button nz-button nzDanger (click)="onReset()">Reset</button>
+        <button
+          nz-button
+          nzType="primary"
+          [disabled]="!isStartingValuesValid()"
+          (click)="onCalculateSteps()"
+        >
+          Confirm
+        </button>
+      </div>
+    }
+  </div>
 
   @if (isStartingValuesValid()) {
     {{ tradeSteps() | json }}

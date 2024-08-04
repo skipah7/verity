@@ -33,6 +33,16 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
 import { calculateInsideTradeSteps } from '@core/utils';
 import { StartingValuesComponent } from '../components/starting-values.component';
 
+const defaultStartingValue: any = {
+  shapes: [undefined, undefined, undefined],
+  users: [undefined, undefined, undefined],
+  wall: [
+    [undefined, undefined],
+    [undefined, undefined],
+    [undefined, undefined],
+  ],
+};
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -97,6 +107,12 @@ export class HomeComponent implements OnInit {
     this.#socket.connect(this.id(), this.username());
     this.#setSubscriptions();
   }
+
+  onReset() {
+    this.form.reset({ startingValue: defaultStartingValue });
+  }
+
+  onCalculateSteps() {}
 
   #setSubscriptions() {
     this.#socket

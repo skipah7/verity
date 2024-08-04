@@ -77,7 +77,7 @@ export class StatueWallShapesComponent implements ControlValueAccessor {
 
   writeValue(value: [WallShapes, WallShapes, WallShapes]): void {
     if (!value) return;
-    this.form.setValue({ ...value }, { emitEvent: false });
+    this.form.patchValue({ ...value });
   }
 
   registerOnChange(onChange: (value: WallShapes[]) => void): void {

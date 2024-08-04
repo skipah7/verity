@@ -21,4 +21,14 @@
   border: 1px solid $border;
 }
 
+.starting-values {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+}
