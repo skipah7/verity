@@ -55,7 +55,7 @@ import { NzIconDirective } from 'ng-zorro-antd/icon';
   `,
 })
 export class ShapeSelectorComponent implements ControlValueAccessor {
-  disabledShapes = input<Shape[]>([Shape.CIRCLE]);
+  disabledShapes = input<Shape[]>([]);
 
   shapes: { icon: string; value: Shape }[] = [
     { icon: 'verity:square', value: Shape.SQUARE },
