@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RoomUpdate } from '@core/types';
+import { BroadcastEvent, RoomUpdate } from '@core/types';
 import { Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
@@ -36,14 +36,14 @@ export class SocketService {
   }
 
   broadcast$() {
-    const response$ = new Observable<any>((observer) => {
+    const response$ = new Observable<BroadcastEvent>((observer) => {
       this.#socket.on('broadcast', (data) => observer.next(...data));
       return () => this.#socket.disconnect();
     });
     return response$;
   }
 
-  broadcast(message: any) {
+  broadcast(message: BroadcastEvent) {
     this.#socket.emit('broadcast', message);
   }
 }
