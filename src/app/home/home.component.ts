@@ -20,7 +20,13 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { map } from 'rxjs';
-import { RoomUser, ShapeOrder, UserOrder } from '@core/types';
+import {
+  BroadcastEventType,
+  RoomUser,
+  ShapeOrder,
+  UserOrder,
+  ValuesChangePayload,
+} from '@core/types';
 import { StatueShapesComponent } from '../components/statue-shapes.component';
 import { StatueUsersComponent } from '../components/statue-users.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -63,12 +69,17 @@ export class HomeComponent implements OnInit {
     this.form.valueChanges
       .pipe(takeUntilDestroyed(this.#destroy))
       .subscribe((value) => {
+        this.#socket.broadcast({
+          type: BroadcastEventType.VALUES_CHANGE,
+          sender: this.currentUser() as RoomUser,
+          payload: value as ValuesChangePayload,
+        });
         console.log(value);
       });
 
     effect(() => {
       const action = this.isAdmin() ? 'enable' : 'disable';
-      this.form[action]();
+      this.form[action]({ emitEvent: false });
     });
   }
 
@@ -95,6 +106,12 @@ export class HomeComponent implements OnInit {
         this.currentUser.set(user);
       });
 
-    this.#socket.broadcast$().subscribe((data) => console.log(data));
+    this.#socket.broadcast$().subscribe((data) => {
+      if (data.sender.id === this.currentUser()?.id) return;
+
+      if (data.type === BroadcastEventType.VALUES_CHANGE) {
+        this.form.setValue(data.payload, { emitEvent: false });
+      }
+    });
   }
 }

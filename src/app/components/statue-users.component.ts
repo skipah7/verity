@@ -31,6 +31,7 @@ import { distinctUntilChanged } from 'rxjs';
           nzAllowClear
           [formControlName]="selector.statue"
           [nzPlaceHolder]="selector.label"
+          [compareWith]="compareWith"
         >
           @for (user of filteredUsers(); track $index) {
             <nz-option [nzValue]="user" [nzLabel]="user.name"></nz-option>
@@ -76,6 +77,7 @@ export class StatueUsersComponent implements ControlValueAccessor {
     const selected = this.selectedUsers();
     return this.users().filter((user) => !selected.includes(user));
   });
+  compareWith = (u1: RoomUser, u2: RoomUser) => u1?.id === u2?.id;
 
   disabled = signal(false);
 
@@ -94,7 +96,7 @@ export class StatueUsersComponent implements ControlValueAccessor {
 
   writeValue(value: [RoomUser, RoomUser, RoomUser]): void {
     if (!value) return;
-    this.form.setValue({ ...value });
+    this.form.setValue({ ...value }, { emitEvent: false });
   }
 
   registerOnChange(onChange: (value: RoomUser[]) => void): void {

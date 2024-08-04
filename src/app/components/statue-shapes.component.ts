@@ -91,7 +91,7 @@ export class StatueShapesComponent implements ControlValueAccessor {
 
   writeValue(value: [Shape, Shape, Shape]): void {
     if (!value) return;
-    this.form.setValue({ ...value });
+    this.form.setValue({ ...value }, { emitEvent: false });
   }
 
   registerOnChange(onChange: (value: Shape[]) => void): void {
