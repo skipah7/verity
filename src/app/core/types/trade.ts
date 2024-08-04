@@ -1,3 +1,13 @@
-import { Shape } from '@core/enums';
+import { Shape, Statue } from '@core/enums';
+import { RoomUser } from './socket';
 
-export type Trade = { source: Shape; shape: Shape; target: Shape };
+export interface Trade {
+  source: Shape;
+  shape: Shape;
+  target: Shape;
+}
+
+export interface UserTrade extends Trade {
+  user: RoomUser;
+  targetStatue: Statue;
+}

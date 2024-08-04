@@ -3,3 +3,5 @@ export enum Statue {
   MID,
   RIGHT,
 }
+
+export const statueLabels = ['Left', 'Middle', 'Right'];

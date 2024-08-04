@@ -41,6 +41,12 @@
   </div>
 
   @if (isStartingValuesValid()) {
-    {{ tradeSteps() | json }}
+    @for (step of tradeSteps(); let index = $index; track index) {
+      <span
+        ><b>{{ step.user.name }}</b> find <b>{{ step.shape }}</b> from knight
+        and deposit it in
+        <b>{{ statueLabels[step.targetStatue] }} statue</b></span
+      >
+    }
   }
 }

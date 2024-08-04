@@ -24,14 +24,15 @@ import {
   BroadcastEventType,
   RoomUser,
   ShapeOrder,
-  Trade,
+  UserTrade,
   ValuesChangePayload,
   WallShapesOrder,
 } from '@core/types';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { calculateInsideTradeSteps } from '@core/utils';
 import { StartingValuesComponent } from '../components/starting-values.component';
+import { Statue, statueLabels } from '@core/enums';
 
 const defaultStartingValue: any = {
   shapes: [undefined, undefined, undefined],
@@ -47,7 +48,6 @@ const defaultStartingValue: any = {
   selector: 'app-home',
   standalone: true,
   imports: [
-    JsonPipe,
     AsyncPipe,
     NzInputModule,
     NzIconModule,
@@ -74,7 +74,8 @@ export class HomeComponent implements OnInit {
   currentUser = signal<RoomUser | undefined>(undefined);
   room = signal<RoomUser[]>([]);
   isStartingValuesValid = signal(false);
-  tradeSteps = signal<Trade[][]>([]);
+  tradeSteps = signal<UserTrade[]>([]);
+  statueLabels = statueLabels;
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
 
@@ -147,7 +148,17 @@ export class HomeComponent implements OnInit {
           startingValue.shapes as ShapeOrder,
           startingValue.wall as WallShapesOrder,
         );
-        this.tradeSteps.set(tradeSteps);
+        const userTrades: UserTrade[] = tradeSteps.map((trade) => {
+          const sourceStatue = startingValue.shapes?.indexOf(
+            trade.source,
+          ) as Statue;
+          const targetStatue = startingValue.shapes?.indexOf(
+            trade.target,
+          ) as Statue;
+          const user = startingValue.users?.[sourceStatue] as RoomUser;
+          return { ...trade, user, targetStatue };
+        });
+        this.tradeSteps.set(userTrades);
       }
     });
   }
