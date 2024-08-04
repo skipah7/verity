@@ -19,22 +19,26 @@ import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
 import {
   BroadcastEventType,
   RoomUser,
   ShapeOrder,
   UserOrder,
   ValuesChangePayload,
+  WallShapesOrder,
 } from '@core/types';
 import { StatueShapesComponent } from '../components/statue-shapes.component';
 import { StatueUsersComponent } from '../components/statue-users.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StatueWallShapesComponent } from '../components/statue-wall-shapes.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
+    AsyncPipe,
     NzInputModule,
     NzIconModule,
     NzButtonModule,
@@ -42,6 +46,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     ReactiveFormsModule,
     StatueShapesComponent,
     StatueUsersComponent,
+    StatueWallShapesComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -57,6 +62,7 @@ export class HomeComponent implements OnInit {
   form = this.#fb.group({
     shapes: this.#fb.control<ShapeOrder | undefined>(undefined),
     users: this.#fb.control<UserOrder | undefined>(undefined),
+    wall: this.#fb.control<WallShapesOrder | undefined>(undefined),
   });
 
   username = signal('');
@@ -64,6 +70,10 @@ export class HomeComponent implements OnInit {
   room = signal<RoomUser[]>([]);
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
+
+  get showWallSelector() {
+    return this.form.controls.shapes.getRawValue()?.every((shape) => !!shape);
+  }
 
   constructor() {
     this.form.valueChanges
@@ -74,8 +84,16 @@ export class HomeComponent implements OnInit {
           sender: this.currentUser() as RoomUser,
           payload: value as ValuesChangePayload,
         });
-        console.log(value);
       });
+    this.form.controls.shapes.valueChanges
+      .pipe(
+        filter((shapes) => !!shapes),
+        map((shapes) => shapes.map((shape) => [shape, undefined])),
+        takeUntilDestroyed(this.#destroy),
+      )
+      .subscribe((wallShapes) =>
+        this.form.controls.wall.setValue(wallShapes as WallShapesOrder),
+      );
 
     effect(() => {
       const action = this.isAdmin() ? 'enable' : 'disable';

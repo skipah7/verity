@@ -110,6 +110,6 @@ export class StatueUsersComponent implements ControlValueAccessor {
   setDisabledState(isDisabled: boolean): void {
     this.disabled.set(isDisabled);
     const action = isDisabled ? 'disable' : 'enable';
-    this.form[action]();
+    this.form[action]({ emitEvent: false });
   }
 }

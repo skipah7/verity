@@ -1,4 +1,4 @@
-import { ShapeOrder, UserOrder } from './starting-values';
+import { ShapeOrder, UserOrder, WallShapesOrder } from './starting-values';
 
 export type RoomUser = { id: string; name: string; isAdmin: boolean };
 
@@ -17,6 +17,7 @@ interface DefaultBroadcastEvent {
 export type ValuesChangePayload = {
   shapes: ShapeOrder | undefined;
   users: UserOrder | undefined;
+  wall: WallShapesOrder | undefined;
 };
 export interface ValuesChangeEvent extends DefaultBroadcastEvent {
   type: BroadcastEventType.VALUES_CHANGE;

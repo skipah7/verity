@@ -2,8 +2,10 @@
 
 :host {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  gap: 16px;
   height: 100%;
   padding: 40px;
   background-color: $background;
@@ -14,10 +16,25 @@
   gap: 8px;
 }
 
-.statue-users-selector {
+.box {
   padding: 42px 24px 50px;
+  border: 1px solid $border;
+}
+
+.statue-users-selector {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  border: 1px solid $border;
+}
+
+.wall-shapes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  span {
+    font-weight: 600;
+    font-size: 24px;
+    text-align: center;
+  }
 }

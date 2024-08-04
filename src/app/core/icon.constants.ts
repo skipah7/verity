@@ -1,7 +1,7 @@
 import { IconDefinition } from '@ant-design/icons-angular';
-import { UserOutline } from '@ant-design/icons-angular/icons';
+import { UserOutline, PlusOutline } from '@ant-design/icons-angular/icons';
 
-const zorroIcons: IconDefinition[] = [UserOutline];
+const zorroIcons: IconDefinition[] = [UserOutline, PlusOutline];
 
 const customIcons: IconDefinition[] = [
   {

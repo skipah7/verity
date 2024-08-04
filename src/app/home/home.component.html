@@ -23,11 +23,17 @@
   </div>
 } @else {
   <!-- required info:
-   statue shapes in order
-   users in order
+   statue shapes in order | done
+   users in order | done
    wall shapes in order -->
-  <div class="statue-users-selector" [formGroup]="form">
+  <div class="box statue-users-selector" [formGroup]="form">
     <app-statue-shapes formControlName="shapes" />
     <app-statue-users formControlName="users" [users]="room()" />
+    @if (showWallSelector) {
+      <div class="wall-shapes">
+        <span class="wall-shapes-header">Wall Shapes</span>
+        <app-statue-wall-shapes formControlName="wall" />
+      </div>
+    }
   </div>
 }
