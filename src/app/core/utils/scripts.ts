@@ -71,7 +71,7 @@ export const calculateInsideTradeSteps = (
     lastTraded = trade.target;
   }
 
-  console.log(firstTradeRound, secondTradeRound);
+  return [firstTradeRound, secondTradeRound];
 };
 
 export const isSameTrade = (trade1: Trade, trade2: Trade) =>
