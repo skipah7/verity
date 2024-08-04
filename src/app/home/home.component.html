@@ -22,22 +22,15 @@
     </button>
   </div>
 } @else {
-  <!-- required info:
-   statue shapes in order | done
-   users in order | done
-   wall shapes in order -->
-  <div class="box statue-users-selector" [formGroup]="form">
-    <app-statue-shapes formControlName="shapes" />
-    <app-statue-users formControlName="users" [users]="room()" />
-    @if (showWallSelector) {
-      <div class="wall-shapes">
-        <span class="wall-shapes-header">Wall Shapes</span>
-        <app-statue-wall-shapes formControlName="wall" />
-      </div>
-    }
-  </div>
+  <ng-container [formGroup]="form">
+    <app-starting-values
+      class="box"
+      formControlName="startingValue"
+      [users]="room()"
+    />
+  </ng-container>
 
   @if (isStartingValuesValid()) {
-    cock
+    {{ tradeSteps() | json }}
   }
 }

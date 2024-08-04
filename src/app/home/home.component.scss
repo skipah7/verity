@@ -21,20 +21,4 @@
   border: 1px solid $border;
 }
 
-.statue-users-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
-.wall-shapes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  span {
-    font-weight: 600;
-    font-size: 24px;
-    text-align: center;
-  }
-}

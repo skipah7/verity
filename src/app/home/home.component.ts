@@ -18,52 +18,33 @@ import {
   FormsModule,
   NonNullableFormBuilder,
   ReactiveFormsModule,
-  ValidatorFn,
 } from '@angular/forms';
-import { filter, map } from 'rxjs';
+import { map } from 'rxjs';
 import {
   BroadcastEventType,
   RoomUser,
   ShapeOrder,
-  UserOrder,
+  Trade,
   ValuesChangePayload,
-  WallShapes,
   WallShapesOrder,
 } from '@core/types';
-import { StatueShapesComponent } from '../components/statue-shapes.component';
-import { StatueUsersComponent } from '../components/statue-users.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { StatueWallShapesComponent } from '../components/statue-wall-shapes.component';
-import { AsyncPipe } from '@angular/common';
-import { Shape } from '@core/enums';
+import { AsyncPipe, JsonPipe } from '@angular/common';
+import { calculateInsideTradeSteps } from '@core/utils';
+import { StartingValuesComponent } from '../components/starting-values.component';
 
-const startingValuesValidator: ValidatorFn = (form) => {
-  const shapes = form.get('shapes')?.getRawValue();
-  const users = form.get('users')?.getRawValue();
-  const wall = form.get('wall')?.getRawValue();
-  if (!shapes || !users || !wall) return { missing: true };
-
-  const shapesValid = shapes.every((shape: Shape) => !!shape);
-  const usersValid = users.every((user: RoomUser) => !!user);
-  const wallValid = wall.every((wallShapes: WallShapes) =>
-    wallShapes.every((shape) => !!shape),
-  );
-
-  return shapesValid && usersValid && wallValid ? null : { missing: true };
-};
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
+    JsonPipe,
     AsyncPipe,
     NzInputModule,
     NzIconModule,
     NzButtonModule,
     FormsModule,
     ReactiveFormsModule,
-    StatueShapesComponent,
-    StatueUsersComponent,
-    StatueWallShapesComponent,
+    StartingValuesComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -76,25 +57,16 @@ export class HomeComponent implements OnInit {
   readonly #destroy = inject(DestroyRef);
   readonly #socket = inject(SocketService);
 
-  form = this.#fb.group(
-    {
-      shapes: this.#fb.control<ShapeOrder | undefined>(undefined),
-      users: this.#fb.control<UserOrder | undefined>(undefined),
-      wall: this.#fb.control<WallShapesOrder | undefined>(undefined),
-    },
-    { validators: [startingValuesValidator] },
-  );
-
+  form = this.#fb.group({
+    startingValue: this.#fb.control<ValuesChangePayload | undefined>(undefined),
+  });
   username = signal('');
   currentUser = signal<RoomUser | undefined>(undefined);
   room = signal<RoomUser[]>([]);
   isStartingValuesValid = signal(false);
+  tradeSteps = signal<Trade[][]>([]);
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
-
-  get showWallSelector() {
-    return this.form.controls.shapes.getRawValue()?.every((shape) => !!shape);
-  }
 
   constructor() {
     this.form.valueChanges
@@ -105,18 +77,9 @@ export class HomeComponent implements OnInit {
         this.#socket.broadcast({
           type: BroadcastEventType.VALUES_CHANGE,
           sender: this.currentUser() as RoomUser,
-          payload: value as ValuesChangePayload,
+          payload: value.startingValue as ValuesChangePayload,
         });
       });
-    this.form.controls.shapes.valueChanges
-      .pipe(
-        filter((shapes) => !!shapes),
-        map((shapes) => shapes.map((shape) => [shape, undefined])),
-        takeUntilDestroyed(this.#destroy),
-      )
-      .subscribe((wallShapes) =>
-        this.form.controls.wall.setValue(wallShapes as WallShapesOrder),
-      );
 
     effect(() => {
       const action = this.isAdmin() ? 'enable' : 'disable';
@@ -153,10 +116,35 @@ export class HomeComponent implements OnInit {
         !isSentByCurrentUser &&
         data.type === BroadcastEventType.VALUES_CHANGE
       ) {
-        this.form.setValue(data.payload, { emitEvent: false });
+        this.form.controls.startingValue.setValue(data.payload, {
+          emitEvent: false,
+        });
       }
 
-      this.isStartingValuesValid.set(!startingValuesValidator(this.form));
+      const startingValue = this.form.controls.startingValue.getRawValue();
+      if (!startingValue) return;
+      this.isStartingValuesValid.set(
+        this.#validateStartingValue(startingValue),
+      );
+      if (this.isStartingValuesValid()) {
+        const tradeSteps = calculateInsideTradeSteps(
+          startingValue.shapes as ShapeOrder,
+          startingValue.wall as WallShapesOrder,
+        );
+        this.tradeSteps.set(tradeSteps);
+      }
     });
+  }
+
+  #validateStartingValue(value: ValuesChangePayload) {
+    if (!value.shapes || !value.users || !value.wall) return false;
+
+    const shapesValid = value.shapes.every((shape) => !!shape);
+    const usersValid = value.users.every((user) => !!user);
+    const wallValid = value.wall.every((wallShapes) =>
+      wallShapes.every((shape) => !!shape),
+    );
+
+    return shapesValid && usersValid && wallValid;
   }
 }
