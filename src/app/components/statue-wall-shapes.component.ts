@@ -34,10 +34,18 @@ import { WallShapesComponent } from './wall-shapes.component';
       display: flex;
       gap: 32px;
       justify-content: space-between;
+
+      @media (max-width: $sm) {
+        gap: 16px;
+      }
     }
 
     app-wall-shapes {
       min-width: 140px;
+
+      @media (max-width: $sm) {
+        min-width: 100px;
+      }
     }
   `,
 })

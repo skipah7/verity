@@ -42,6 +42,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       display: flex;
       gap: 32px;
       justify-content: space-between;
+
+      @media (max-width: $sm) {
+        gap: 16px;
+      }
     }
 
     .statue {
@@ -50,6 +54,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       gap: 8px;
       align-items: center;
       min-width: 140px;
+
+      @media (max-width: $sm) {
+        min-width: auto;
+      }
     }
 
     span {

@@ -47,10 +47,19 @@ import { distinctUntilChanged } from 'rxjs';
       display: flex;
       gap: 32px;
       justify-content: space-between;
+
+      @media (max-width: $sm) {
+        gap: 8px;
+      }
     }
 
     nz-select {
       min-width: 140px;
+
+      @media (max-width: $sm) {
+        min-width: 100px;
+        width: 120px;
+      }
     }
   `,
 })
