@@ -14,7 +14,9 @@ import { NzIconDirective } from 'ng-zorro-antd/icon';
       @if (!value() || value() === shape.value) {
         <span
           [class.selected]="shape.value === value()"
-          [class.disabled]="disabledShapes().includes(shape.value)"
+          [class.disabled]="
+            disabledShapes().includes(shape.value) || disabled()
+          "
           nz-icon
           [nzType]="shape.icon"
           (click)="onShapeClick(shape.value)"
@@ -35,15 +37,19 @@ import { NzIconDirective } from 'ng-zorro-antd/icon';
       font-size: 24px;
       transition: 200ms ease-in;
 
-      &.selected {
-        color: $primary;
-      }
-
       &.disabled {
         color: $disabled;
 
         &:hover {
           cursor: not-allowed;
+        }
+      }
+
+      &.selected {
+        color: $primary;
+
+        &:hover {
+          cursor: pointer;
         }
       }
 
@@ -63,12 +69,14 @@ export class ShapeSelectorComponent implements ControlValueAccessor {
     { icon: 'verity:circle', value: Shape.CIRCLE },
   ];
   value = signal<Shape | undefined>(undefined);
+  disabled = signal(false);
 
   #onChange: (value: Shape | undefined) => void;
   #onTouched: () => void;
 
   onShapeClick(shape: Shape) {
-    if (this.disabledShapes().includes(shape)) return;
+    if (this.disabled()) return;
+    if (!this.value() && this.disabledShapes().includes(shape)) return;
 
     const value = this.value() ? undefined : shape;
     this.value.set(value);
@@ -85,5 +93,9 @@ export class ShapeSelectorComponent implements ControlValueAccessor {
 
   registerOnTouched(onTouched: () => void): void {
     this.#onTouched = onTouched;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled.set(isDisabled);
   }
 }

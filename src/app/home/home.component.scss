@@ -13,3 +13,11 @@
   display: flex;
   gap: 8px;
 }
+
+.statue-users-selector {
+  padding: 42px 24px 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border: 1px solid $border;
+}

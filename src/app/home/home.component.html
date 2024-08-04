@@ -21,4 +21,13 @@
       Join
     </button>
   </div>
-} @else {}
+} @else {
+  <!-- required info:
+   statue shapes in order
+   users in order
+   wall shapes in order -->
+  <div class="statue-users-selector" [formGroup]="form">
+    <app-statue-shapes formControlName="shapes" />
+    <app-statue-users formControlName="users" [users]="room()" />
+  </div>
+}
