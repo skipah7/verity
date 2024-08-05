@@ -49,4 +49,8 @@
 
 nz-alert {
   width: 534px;
+
+  @media (max-width: $sm) {
+    width: auto;
+  }
 }
