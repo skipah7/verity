@@ -21,11 +21,17 @@
 }
 
 .box {
-  padding: 42px 24px 50px;
+  padding: 42px 24px;
   border: 1px solid $border;
+  min-width: 534px;
+
+  &.timeline {
+    padding-bottom: 0;
+  }
 
   @media (max-width: $sm) {
     padding: 42px 8px;
+    min-width: auto;
   }
 }
 
@@ -33,10 +39,10 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
+}
 
-  .buttons {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-  }
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
 }

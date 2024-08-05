@@ -32,7 +32,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe } from '@angular/common';
 import { calculateInsideTradeSteps } from '@core/utils';
 import { StartingValuesComponent } from '../components/starting-values.component';
-import { Statue, statueLabels } from '@core/enums';
+import { Shape, Statue, statueLabels } from '@core/enums';
+import { NzTimelineModule } from 'ng-zorro-antd/timeline';
 
 const defaultStartingValue: any = {
   shapes: [undefined, undefined, undefined],
@@ -55,6 +56,7 @@ const defaultStartingValue: any = {
     FormsModule,
     ReactiveFormsModule,
     StartingValuesComponent,
+    NzTimelineModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -74,7 +76,7 @@ export class HomeComponent implements OnInit {
   currentUser = signal<RoomUser | undefined>(undefined);
   room = signal<RoomUser[]>([]);
   isStartingValuesValid = signal(false);
-  tradeSteps = signal<UserTrade[]>([]);
+  tradeSteps = signal<UserTrade[] | undefined>(undefined);
   statueLabels = statueLabels;
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
@@ -111,6 +113,7 @@ export class HomeComponent implements OnInit {
 
   onReset() {
     this.form.reset({ startingValue: defaultStartingValue });
+    this.tradeSteps.set(undefined);
   }
 
   onCalculateSteps() {}
@@ -143,23 +146,23 @@ export class HomeComponent implements OnInit {
       this.isStartingValuesValid.set(
         this.#validateStartingValue(startingValue),
       );
-      if (this.isStartingValuesValid()) {
-        const tradeSteps = calculateInsideTradeSteps(
-          startingValue.shapes as ShapeOrder,
-          startingValue.wall as WallShapesOrder,
-        );
-        const userTrades: UserTrade[] = tradeSteps.map((trade) => {
-          const sourceStatue = startingValue.shapes?.indexOf(
-            trade.source,
-          ) as Statue;
-          const targetStatue = startingValue.shapes?.indexOf(
-            trade.target,
-          ) as Statue;
-          const user = startingValue.users?.[sourceStatue] as RoomUser;
-          return { ...trade, user, targetStatue };
-        });
-        this.tradeSteps.set(userTrades);
-      }
+      if (!this.isStartingValuesValid()) return this.tradeSteps.set(undefined);
+
+      const tradeSteps = calculateInsideTradeSteps(
+        startingValue.shapes as ShapeOrder,
+        startingValue.wall as WallShapesOrder,
+      );
+      const userTrades: UserTrade[] = tradeSteps.map((trade) => {
+        const sourceStatue = startingValue.shapes?.indexOf(
+          trade.source,
+        ) as Statue;
+        const targetStatue = startingValue.shapes?.indexOf(
+          trade.target,
+        ) as Statue;
+        const user = startingValue.users?.[sourceStatue] as RoomUser;
+        return { ...trade, user, targetStatue };
+      });
+      this.tradeSteps.set(userTrades);
     });
   }
 
