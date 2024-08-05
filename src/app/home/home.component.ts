@@ -24,6 +24,7 @@ import {
   BroadcastEventType,
   RoomUser,
   ShapeOrder,
+  UserOrder,
   UserTrade,
   ValuesChangePayload,
   WallShapesOrder,
@@ -76,8 +77,10 @@ export class HomeComponent implements OnInit {
   currentUser = signal<RoomUser | undefined>(undefined);
   room = signal<RoomUser[]>([]);
   isStartingValuesValid = signal(false);
-  tradeSteps = signal<UserTrade[] | undefined>(undefined);
   statueLabels = statueLabels;
+
+  tradeSteps = signal<UserTrade[] | undefined>(undefined);
+  currentStep = signal<number>(0);
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
 
@@ -141,32 +144,31 @@ export class HomeComponent implements OnInit {
         });
       }
 
-      const startingValue = this.form.controls.startingValue.getRawValue();
-      if (!startingValue) return;
-      this.isStartingValuesValid.set(
-        this.#validateStartingValue(startingValue),
-      );
-      if (!this.isStartingValuesValid()) return this.tradeSteps.set(undefined);
-
-      const tradeSteps = calculateInsideTradeSteps(
-        startingValue.shapes as ShapeOrder,
-        startingValue.wall as WallShapesOrder,
-      );
-      const userTrades: UserTrade[] = tradeSteps.map((trade) => {
-        const sourceStatue = startingValue.shapes?.indexOf(
-          trade.source,
-        ) as Statue;
-        const targetStatue = startingValue.shapes?.indexOf(
-          trade.target,
-        ) as Statue;
-        const user = startingValue.users?.[sourceStatue] as RoomUser;
-        return { ...trade, user, targetStatue };
-      });
-      this.tradeSteps.set(userTrades);
+      this.#calculateTradeSteps();
     });
   }
 
-  #validateStartingValue(value: ValuesChangePayload) {
+  #calculateTradeSteps() {
+    const value = this.form.controls.startingValue.getRawValue();
+    if (!value) return;
+
+    const isValid = this.#validateStartingValue(value);
+    this.isStartingValuesValid.set(isValid);
+    if (!isValid) return this.tradeSteps.set(undefined);
+
+    const tradeSteps = calculateInsideTradeSteps(value.shapes, value.wall);
+    const userTrades: UserTrade[] = tradeSteps.map((trade) => {
+      const sourceStatue = value.shapes.indexOf(trade.source);
+      const targetStatue = value.shapes.indexOf(trade.target);
+      const user = value.users[sourceStatue];
+      return { ...trade, user, targetStatue };
+    });
+    this.tradeSteps.set(userTrades);
+  }
+
+  #validateStartingValue(
+    value: ValuesChangePayload,
+  ): value is { shapes: ShapeOrder; wall: WallShapesOrder; users: UserOrder } {
     if (!value.shapes || !value.users || !value.wall) return false;
 
     const shapesValid = value.shapes.every((shape) => !!shape);

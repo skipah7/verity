@@ -30,9 +30,17 @@
     <div class="box timeline">
       <nz-timeline>
         @for (step of trades; let index = $index; track index) {
-          <nz-timeline-item
-            ><b>{{ step.user.name }}</b> find <b>{{ step.shape }}</b> from
-            knight and deposit it in
+          @if (index === 3) {
+            <nz-timeline-item nzColor="#d89614"
+              >Next 3 trades should be done in quick succession, before witness
+              kills you</nz-timeline-item
+            >
+          }
+          <nz-timeline-item [nzColor]="index > currentStep() ? 'gray' : 'blue'"
+            ><b [class.current]="step.user.id === currentUser()?.id">{{
+              step.user.name
+            }}</b>
+            find <b>{{ step.shape }}</b> from knight and deposit it in
             <b
               >{{ statueLabels[step.targetStatue] }} statue</b
             ></nz-timeline-item

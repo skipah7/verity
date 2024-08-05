@@ -27,6 +27,10 @@
 
   &.timeline {
     padding-bottom: 0;
+
+    b.current {
+      color: $primary;
+    }
   }
 
   @media (max-width: $sm) {
