@@ -1,4 +1,4 @@
-import { Statue } from '@core/enums';
+import { Shape, Statue } from '@core/enums';
 import { ShapeOrder, Trade, WallShapesOrder } from '@core/types';
 
 export const calculateInsideTradeSteps = (
@@ -40,38 +40,28 @@ export const calculateInsideTradeSteps = (
     return !hasAnotherOption || !hasDouble;
   });
 
-  let lastTraded = shapes[lastTrade ?? shapes.length - 1];
-  const firstTradeRound: Trade[] = [];
-  for (let i = 0; i < 3; i++) {
+  let lastTarget = shapes[lastTrade ?? shapes.length - 1];
+  let tradedFrom: Shape[] = [];
+  const resultTrades: Trade[] = [];
+  for (let i = 0; i < possibleTrades.length; i++) {
     const trade = possibleTrades.find(
       (item) =>
-        lastTraded !== item.target &&
-        !firstTradeRound.some((element) => isSameTrade(element, item)) &&
-        !firstTradeRound.some((element) => element.source === item.source),
+        lastTarget !== item.target &&
+        !tradedFrom.includes(item.source) &&
+        !resultTrades.some((element) => isSameTrade(element, item)),
     );
     if (!trade) continue;
 
-    firstTradeRound.push(trade);
-    lastTraded = trade.target;
+    resultTrades.push(trade);
+    lastTarget = trade.target;
+    if (tradedFrom.length === 2) {
+      tradedFrom = [];
+      continue;
+    }
+    tradedFrom.push(trade.source);
   }
 
-  const possibleSecondTradeRound = possibleTrades.filter(
-    (trade) => !firstTradeRound.some((item) => isSameTrade(item, trade)),
-  );
-  const secondTradeRound: Trade[] = [];
-  for (let i = 0; i < 3; i++) {
-    const trade = possibleSecondTradeRound.find(
-      (item) =>
-        lastTraded !== item.target &&
-        !secondTradeRound.some((element) => isSameTrade(element, item)),
-    );
-    if (!trade) continue;
-
-    secondTradeRound.push(trade);
-    lastTraded = trade.target;
-  }
-
-  return [...firstTradeRound, ...secondTradeRound];
+  return resultTrades;
 };
 
 export const isSameTrade = (trade1: Trade, trade2: Trade) =>
