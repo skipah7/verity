@@ -19,7 +19,13 @@ import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { BehaviorSubject, distinctUntilChanged, map, skip } from 'rxjs';
+import {
+  BehaviorSubject,
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  skip,
+} from 'rxjs';
 import {
   BroadcastEventType,
   RoomUser,
@@ -96,7 +102,7 @@ export class HomeComponent implements OnInit {
 
   constructor() {
     this.form.valueChanges
-      .pipe(takeUntilDestroyed(this.#destroy))
+      .pipe(debounceTime(0), takeUntilDestroyed(this.#destroy))
       .subscribe((value) => {
         if (!this.isAdmin()) return;
 
