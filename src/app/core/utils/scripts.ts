@@ -42,23 +42,44 @@ export const calculateInsideTradeSteps = (
 
   let lastTarget = shapes[lastTrade ?? shapes.length - 1];
   let tradedFrom: Shape[] = [];
+  let tradedTo: Shape[] = [];
   const resultTrades: Trade[] = [];
   for (let i = 0; i < possibleTrades.length; i++) {
-    const trade = possibleTrades.find(
-      (item) =>
-        lastTarget !== item.target &&
-        !tradedFrom.includes(item.source) &&
-        !resultTrades.some((element) => isSameTrade(element, item)),
-    );
-    if (!trade) continue;
+    const result = possibleTrades.find((trade) => {
+      // i really dont like this part, it feels crutchy, but i havent found any better solution
+      // this is used to ensure, that in any trade round (3 trades) there is no same source and same target
+      const previousSkippedTrades = possibleTrades.filter(
+        (item) =>
+          tradedFrom.includes(item.source) &&
+          !tradedTo.includes(item.target) &&
+          !resultTrades.some((element) => isSameTrade(element, item)),
+      );
+      const hasSameTargetWithSkippedTrades = previousSkippedTrades.length
+        ? previousSkippedTrades.some((item) => item.target === trade.target)
+        : true;
 
-    resultTrades.push(trade);
-    lastTarget = trade.target;
+      return (
+        lastTarget !== trade.target &&
+        hasSameTargetWithSkippedTrades &&
+        !tradedFrom.includes(trade.source) &&
+        !tradedTo.includes(trade.target) &&
+        !resultTrades.some((element) => isSameTrade(element, trade))
+      );
+    });
+    if (!result) continue;
+
+    resultTrades.push(result);
+    lastTarget = result.target;
     if (tradedFrom.length === 2) {
       tradedFrom = [];
-      continue;
+    } else {
+      tradedFrom.push(result.source);
     }
-    tradedFrom.push(trade.source);
+    if (tradedTo.length === 2) {
+      tradedTo = [];
+    } else {
+      tradedTo.push(result.target);
+    }
   }
 
   return resultTrades;
