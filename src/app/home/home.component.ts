@@ -19,7 +19,7 @@ import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { BehaviorSubject, map, skip } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, skip } from 'rxjs';
 import {
   BroadcastEventType,
   RoomUser,
@@ -36,6 +36,9 @@ import { StartingValuesComponent } from '../components/starting-values.component
 import { Shape, Statue, statueLabels } from '@core/enums';
 import { NzTimelineModule } from 'ng-zorro-antd/timeline';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzMessageModule } from 'ng-zorro-antd/message';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 const defaultStartingValue: any = {
   shapes: [undefined, undefined, undefined],
@@ -60,6 +63,8 @@ const defaultStartingValue: any = {
     StartingValuesComponent,
     NzTimelineModule,
     NzTagModule,
+    NzAlertModule,
+    NzMessageModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -71,6 +76,7 @@ export class HomeComponent implements OnInit {
   readonly #fb = inject(NonNullableFormBuilder);
   readonly #destroy = inject(DestroyRef);
   readonly #socket = inject(SocketService);
+  readonly #notify = inject(NzMessageService);
 
   form = this.#fb.group({
     startingValue: this.#fb.control<ValuesChangePayload | undefined>(undefined),
@@ -86,6 +92,7 @@ export class HomeComponent implements OnInit {
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
 
   #lastTrade: Statue | undefined = undefined;
+  #socketStep = new BehaviorSubject<number | undefined>(undefined);
 
   constructor() {
     this.form.valueChanges
@@ -99,8 +106,8 @@ export class HomeComponent implements OnInit {
           payload: value.startingValue as ValuesChangePayload,
         });
       });
-    this.currentStep$
-      .pipe(skip(1), takeUntilDestroyed(this.#destroy))
+    this.#socketStep
+      .pipe(skip(1), distinctUntilChanged(), takeUntilDestroyed(this.#destroy))
       .subscribe((step) => {
         this.#socket.broadcast({
           type: BroadcastEventType.STEP_CHANGE,
@@ -127,16 +134,18 @@ export class HomeComponent implements OnInit {
   }
 
   onReset() {
+    this.form.enable({ emitEvent: false });
     this.form.reset({ startingValue: defaultStartingValue });
-    this.currentStep$.next(undefined);
+    this.#socketStep.next(undefined);
   }
 
   onStart() {
-    this.currentStep$.next(1);
-    const steps = this.tradeSteps();
-    if (steps) {
-      this.#lastTrade = steps[steps.length - 1].targetStatue;
-    }
+    this.form.disable({ emitEvent: false });
+    this.#socketStep.next(1);
+  }
+
+  onStepCompleted() {
+    this.#socketStep.next((this.currentStep$.value as number) + 1);
   }
 
   #setSubscriptions() {
@@ -163,8 +172,27 @@ export class HomeComponent implements OnInit {
         this.#calculateTradeSteps();
       } else if (data.type === BroadcastEventType.STEP_CHANGE) {
         const step = data.payload.step;
-        if (this.currentStep$.value !== step) {
-          this.currentStep$.next(step);
+        this.currentStep$.next(step);
+        if (step && step > 1) {
+          this.#notify.success(
+            `${data.sender.name} completed step ${step - 1}`,
+          );
+        }
+
+        if (step === undefined) {
+          this.#lastTrade = undefined;
+        }
+
+        const tradeSteps = this.tradeSteps();
+        if (step === 1 && tradeSteps) {
+          this.#lastTrade = tradeSteps[tradeSteps.length - 1].targetStatue;
+        }
+        if (step === 7) {
+          if (this.isAdmin()) {
+            this.form.enable({ emitEvent: false });
+            this.form.reset({ startingValue: defaultStartingValue });
+          }
+          this.currentStep$.next(undefined);
         }
       }
     });

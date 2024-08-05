@@ -41,7 +41,9 @@
             >
           }
           <nz-timeline-item
-            [nzColor]="index > ((currentStep$ | async) ?? 0) ? 'gray' : 'blue'"
+            [nzColor]="
+              index + 1 > ((currentStep$ | async) ?? 0) ? 'gray' : 'blue'
+            "
           >
             @if (step.user.id === currentUser()?.id) {
               <nz-tag nzColor="green">{{ step.user.name }}</nz-tag>
@@ -56,6 +58,34 @@
         }
       </nz-timeline>
     </div>
+  }
+
+  @if (currentStep$ | async; as currentStep) {
+    @if (tradeSteps()?.[currentStep - 1]; as step) {
+      <nz-alert
+        nzShowIcon
+        [nzType]="step.user.id === currentUser()?.id ? 'success' : 'info'"
+        [nzMessage]="'Step ' + currentStep"
+        [nzDescription]="descriptionTemplate"
+        [nzAction]="step.user.id === currentUser()?.id ? actionTemplate : null"
+      ></nz-alert>
+      <ng-template #descriptionTemplate>
+        <p>
+          @if (step.user.id === currentUser()?.id) {
+            Find
+          } @else {
+            <b>{{ step.user.name }}</b> find
+          }
+          <b>{{ step.shape }}</b> from knight and deposit it in
+          <b>{{ statueLabels[step.targetStatue] }} statue</b>
+        </p>
+      </ng-template>
+      <ng-template #actionTemplate>
+        <button nz-button nzType="primary" (click)="onStepCompleted()">
+          Done
+        </button>
+      </ng-template>
+    }
   }
 
   @if (isAdmin()) {
@@ -73,14 +103,4 @@
       }
     </div>
   }
-
-  <!-- @if (tradeSteps(); as trades) {
-    @for (step of trades; let index = $index; track index) {
-      <span
-        ><b>{{ step.user.name }}</b> find <b>{{ step.shape }}</b> from knight
-        and deposit it in
-        <b>{{ statueLabels[step.targetStatue] }} statue</b></span
-      >
-    }
-  } -->
 }
