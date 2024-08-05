@@ -19,7 +19,7 @@ import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { map } from 'rxjs';
+import { BehaviorSubject, map, skip } from 'rxjs';
 import {
   BroadcastEventType,
   RoomUser,
@@ -35,6 +35,7 @@ import { calculateInsideTradeSteps } from '@core/utils';
 import { StartingValuesComponent } from '../components/starting-values.component';
 import { Shape, Statue, statueLabels } from '@core/enums';
 import { NzTimelineModule } from 'ng-zorro-antd/timeline';
+import { NzTagModule } from 'ng-zorro-antd/tag';
 
 const defaultStartingValue: any = {
   shapes: [undefined, undefined, undefined],
@@ -58,6 +59,7 @@ const defaultStartingValue: any = {
     ReactiveFormsModule,
     StartingValuesComponent,
     NzTimelineModule,
+    NzTagModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -76,13 +78,14 @@ export class HomeComponent implements OnInit {
   username = signal('');
   currentUser = signal<RoomUser | undefined>(undefined);
   room = signal<RoomUser[]>([]);
-  isStartingValuesValid = signal(false);
   statueLabels = statueLabels;
 
   tradeSteps = signal<UserTrade[] | undefined>(undefined);
-  currentStep = signal<number>(0);
+  currentStep$ = new BehaviorSubject<number | undefined>(undefined);
 
   isAdmin = computed(() => !!this.currentUser()?.isAdmin);
+
+  #lastTrade: Statue | undefined = undefined;
 
   constructor() {
     this.form.valueChanges
@@ -94,6 +97,15 @@ export class HomeComponent implements OnInit {
           type: BroadcastEventType.VALUES_CHANGE,
           sender: this.currentUser() as RoomUser,
           payload: value.startingValue as ValuesChangePayload,
+        });
+      });
+    this.currentStep$
+      .pipe(skip(1), takeUntilDestroyed(this.#destroy))
+      .subscribe((step) => {
+        this.#socket.broadcast({
+          type: BroadcastEventType.STEP_CHANGE,
+          sender: this.currentUser() as RoomUser,
+          payload: { step },
         });
       });
 
@@ -116,10 +128,16 @@ export class HomeComponent implements OnInit {
 
   onReset() {
     this.form.reset({ startingValue: defaultStartingValue });
-    this.tradeSteps.set(undefined);
+    this.currentStep$.next(undefined);
   }
 
-  onCalculateSteps() {}
+  onStart() {
+    this.currentStep$.next(1);
+    const steps = this.tradeSteps();
+    if (steps) {
+      this.#lastTrade = steps[steps.length - 1].targetStatue;
+    }
+  }
 
   #setSubscriptions() {
     this.#socket
@@ -135,16 +153,20 @@ export class HomeComponent implements OnInit {
 
     this.#socket.broadcast$().subscribe((data) => {
       const isSentByCurrentUser = data.sender.id === this.currentUser()?.id;
-      if (
-        !isSentByCurrentUser &&
-        data.type === BroadcastEventType.VALUES_CHANGE
-      ) {
-        this.form.controls.startingValue.setValue(data.payload, {
-          emitEvent: false,
-        });
-      }
 
-      this.#calculateTradeSteps();
+      if (data.type === BroadcastEventType.VALUES_CHANGE) {
+        if (!isSentByCurrentUser) {
+          this.form.controls.startingValue.setValue(data.payload, {
+            emitEvent: false,
+          });
+        }
+        this.#calculateTradeSteps();
+      } else if (data.type === BroadcastEventType.STEP_CHANGE) {
+        const step = data.payload.step;
+        if (this.currentStep$.value !== step) {
+          this.currentStep$.next(step);
+        }
+      }
     });
   }
 
@@ -153,10 +175,13 @@ export class HomeComponent implements OnInit {
     if (!value) return;
 
     const isValid = this.#validateStartingValue(value);
-    this.isStartingValuesValid.set(isValid);
     if (!isValid) return this.tradeSteps.set(undefined);
 
-    const tradeSteps = calculateInsideTradeSteps(value.shapes, value.wall);
+    const tradeSteps = calculateInsideTradeSteps(
+      value.shapes,
+      value.wall,
+      this.#lastTrade,
+    );
     const userTrades: UserTrade[] = tradeSteps.map((trade) => {
       const sourceStatue = value.shapes.indexOf(trade.source);
       const targetStatue = value.shapes.indexOf(trade.target);

@@ -24,7 +24,9 @@ export interface ValuesChangeEvent extends DefaultBroadcastEvent {
   payload: ValuesChangePayload;
 }
 
-export type StepChangePayload = {};
+export type StepChangePayload = {
+  step: number | undefined;
+};
 export interface StepChangeEvent extends DefaultBroadcastEvent {
   type: BroadcastEventType.STEP_CHANGE;
   payload: StepChangePayload;

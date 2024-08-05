@@ -35,7 +35,7 @@ import { valueAccessor } from '@core/utils/form-utils';
     <ng-container [formGroup]="form">
       <app-statue-shapes formControlName="shapes" />
       <app-statue-users formControlName="users" [users]="users()" />
-      @if (showWallSelector) {
+      @if (showWallSelector && showWallShapes()) {
         <div class="wall-shapes">
           <span class="wall-shapes-header">Wall Shapes</span>
           <app-statue-wall-shapes formControlName="wall" />
@@ -67,6 +67,7 @@ import { valueAccessor } from '@core/utils/form-utils';
 })
 export class StartingValuesComponent implements ControlValueAccessor {
   users = input<RoomUser[]>([]);
+  showWallShapes = input(true);
 
   readonly #fb = inject(NonNullableFormBuilder);
   readonly #destroy = inject(DestroyRef);

@@ -23,7 +23,11 @@
   </div>
 } @else {
   <div class="box starting-values" [formGroup]="form">
-    <app-starting-values formControlName="startingValue" [users]="room()" />
+    <app-starting-values
+      formControlName="startingValue"
+      [users]="room()"
+      [showWallShapes]="(currentStep$ | async) === undefined"
+    />
   </div>
 
   @if (tradeSteps(); as trades) {
@@ -36,10 +40,14 @@
               kills you</nz-timeline-item
             >
           }
-          <nz-timeline-item [nzColor]="index > currentStep() ? 'gray' : 'blue'"
-            ><b [class.current]="step.user.id === currentUser()?.id">{{
-              step.user.name
-            }}</b>
+          <nz-timeline-item
+            [nzColor]="index > ((currentStep$ | async) ?? 0) ? 'gray' : 'blue'"
+          >
+            @if (step.user.id === currentUser()?.id) {
+              <nz-tag nzColor="green">{{ step.user.name }}</nz-tag>
+            } @else {
+              <b>{{ step.user.name }}</b>
+            }
             find <b>{{ step.shape }}</b> from knight and deposit it in
             <b
               >{{ statueLabels[step.targetStatue] }} statue</b
@@ -53,14 +61,16 @@
   @if (isAdmin()) {
     <div class="buttons">
       <button nz-button nzDanger (click)="onReset()">Reset</button>
-      <button
-        nz-button
-        nzType="primary"
-        [disabled]="!isStartingValuesValid()"
-        (click)="onCalculateSteps()"
-      >
-        Confirm
-      </button>
+      @if ((currentStep$ | async) === undefined) {
+        <button
+          nz-button
+          nzType="primary"
+          [disabled]="!tradeSteps()"
+          (click)="onStart()"
+        >
+          Start
+        </button>
+      }
     </div>
   }
 
