@@ -154,11 +154,28 @@ export class HomeComponent implements OnInit {
     this.#socketStep.next((this.currentStep$.value as number) + 1);
   }
 
+  #symmetricalDifference(array1: RoomUser[], array2: RoomUser[]) {
+    return array1
+      .filter((item1) => !array2.some((item2) => item1.id === item2.id))
+      .concat(
+        array2.filter(
+          (item2) => !array1.some((item1) => item2.id === item1.id),
+        ),
+      );
+  }
   #setSubscriptions() {
     this.#socket
       .roomUpdates$()
       .pipe(map((result) => result.room))
       .subscribe((result) => {
+        if (this.room().length) {
+          const difference = this.#symmetricalDifference(result, this.room());
+          if (this.room().length > result.length) {
+            this.#notify.warning(`${difference[0].name} left`);
+          } else {
+            this.#notify.info(`${difference[0].name} joined`);
+          }
+        }
         this.room.set(result);
 
         if (this.currentUser()) return;
