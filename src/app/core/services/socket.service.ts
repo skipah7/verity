@@ -1,10 +1,13 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BroadcastEvent, RoomUpdate } from '@core/types';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
+  readonly #notify = inject(NzMessageService);
+
   readonly #uri = 'wss://verity.kavu.dev/verity';
   #socket: Socket;
 
@@ -23,6 +26,7 @@ export class SocketService {
         // the connection was denied by the server
         // in that case, `socket.connect()` must be manually called in order to reconnect
         console.error('Unable to join:', error.message);
+        this.#notify.error(`Unable to join: ${error.message}`);
       }
     });
   }
