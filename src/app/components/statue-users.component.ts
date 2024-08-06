@@ -84,7 +84,9 @@ export class StatueUsersComponent implements ControlValueAccessor {
   selectedUsers = signal<RoomUser[]>([]);
   filteredUsers = computed(() => {
     const selected = this.selectedUsers();
-    return this.users().filter((user) => !selected.includes(user));
+    return this.users().filter(
+      (user) => !selected.some((item) => item.id === user.id),
+    );
   });
   compareWith = (u1: RoomUser, u2: RoomUser) => u1?.id === u2?.id;
 
